@@ -14,6 +14,8 @@ describe('register protocol', () => {
   const testCommand = '"C:\\registerprotocolwin32.exe" "%1"';
   const testIcon = 'C:\\registerprotocolwin32.ico';
 
+  const key = '\\Software\\Classes\\' + testProtocol;
+
   if (process.platform !== 'win32') throw Exception('Tests must run under Windows platform');
 
   after(() => {
@@ -43,12 +45,12 @@ describe('register protocol', () => {
       .then(() => {
         const protocolKey = new Registry({
           hive: Registry.HKCU, // HKEY_CURRENT_USER
-          key: '\\Software\\Classes\\' + testProtocol
+          key: key
         });
 
         const commandKey = new Registry({
           hive: Registry.HKCU, // HKEY_CURRENT_USER
-          key: '\\Software\\Classes\\' + testProtocol + '\\shell\\open\\command'
+          key: key + '\\shell\\open\\command'
         });
 
         const getProtocolKey = new Promise((resolve, reject) => {
@@ -76,7 +78,7 @@ describe('register protocol', () => {
       .then(() => {
         const iconKey = new Registry({
           hive: Registry.HKCU, // HKEY_CURRENT_USER
-          key: '\\Software\\Classes\\' + testProtocol + '\\DefaultIcon'
+          key: key + '\\DefaultIcon'
         });
 
         const getIconKey = new Promise((resolve, reject) => {
@@ -91,31 +93,25 @@ describe('register protocol', () => {
       });
   });
 
-  it('should create protocol in HKCR when admin', () => {
-    return isAdmin()
+  // Requires Administrative Privileges
+  it('should create protocol for all users', () => {
+    return handler.install(testProtocol, testDescription, testCommand, { allUsers: true })
       .then(() => {
-        return handler.install(testProtocol, testDescription, testCommand, { admin: true })
-          .then(() => {
-            const protocolKey = new Registry({
-              hive: Registry.HKCR, // HKEY_CURRENT_ROOT
-              key: '\\Software\\Classes\\' + testProtocol
-            });
+        const protocolKey = new Registry({
+          hive: Registry.HKLM, // HKEY_LOCAL_MACHINE
+          key: key
+        });
 
-            const getKey = new Promise((resolve, reject) => {
-              protocolKey.get('', (err, item) => {
-                if (err) reject(err);
-                resolve();
-              });
-            });
+        const getKey = new Promise((resolve, reject) => {
+          protocolKey.get('', (err, item) => {
+            if (err) reject(err);
+            resolve();
+          });
+        });
 
-            return assert.isFulfilled(getKey);
-          })
-          .catch((err) => assert(false, err.toString()));
-      })
-      .catch((err) => {
-        const install = handler.install(testProtocol, testDescription, testCommand, { admin: true });
-        return assert.isRejected(install, /Access is denied/, err);
-      });
+        return assert.isFulfilled(getKey);
+      },
+      (err) => assert(false, err.toString()));
   });
 
   it('should delete protocol', () => {
@@ -125,7 +121,7 @@ describe('register protocol', () => {
           .then(() => {
             const protocolKey = new Registry({
               hive: Registry.HKCU, // HKEY_CURRENT_USER
-              key: '\\Software\\Classes\\' + testProtocol
+              key: key
             });
 
             const getKey = new Promise((resolve, reject) => {
@@ -139,15 +135,4 @@ describe('register protocol', () => {
           .catch((err) => assert(false, err.toString()));
     });
   });
-
-  function isAdmin() {
-    return new Promise((resolve, reject) => {
-      // http://stackoverflow.com/a/11995662/64949
-      childProcess.execFile('net.exe', ['session'], (err) => {
-        if (err) reject(err);
-        resolve();
-      });
-    });
-  }
-
 });

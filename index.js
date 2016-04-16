@@ -6,27 +6,22 @@ function install(protocol, description, command, opts) {
   if (typeof description !== 'string') throw new Error('parameter `description` is required');
   if (typeof command !== 'string') throw new Error('parameter `command` is required');
 
-  opts = extend({
-    admin: false,
-    icon: null
-  }, opts);
-
-  // By default we write to "HKEY_CURRENT USER" which does not need admin
-  // privileges and gets inherited by "HKEY_CLASSES_ROOT". If admin option is
-  // used then we write to "HKEY_CLASSES_ROOT" assuming this is being called
-  // by a process with admin privileges.
-  var hive = opts.admin ? Registry.HKCR : Registry.HKCU;
+  var o = getOpts(protocol, opts);
+  opts = o.opts;
+  var hive = o.hive;
+  var key = o.key;
 
   return new Promise(function(resolve, reject) {
     var protocolKey = new Registry({
       hive: hive,
-      key: '\\Software\\Classes\\' + protocol
+      key: key
     });
 
     setProtocol();
 
     function setProtocol() {
-      protocolKey.set('', Registry.REG_SZ, protocol, setUrlProtocol);
+      var value = 'URL:' + protocol + ' protocol';
+      protocolKey.set('', Registry.REG_SZ, value, setUrlProtocol);
     }
 
     function setUrlProtocol(err) {
@@ -38,7 +33,7 @@ function install(protocol, description, command, opts) {
       if (err) reject(err);
       var commandKey = new Registry({
         hive: hive,
-        key: '\\Software\\Classes\\' + protocol + '\\shell\\open\\command'
+        key: key + '\\shell\\open\\command'
       });
 
       var optionalOrDone = opts.icon ? setIcon : done;
@@ -49,34 +44,31 @@ function install(protocol, description, command, opts) {
       if (err) reject(err);
       var iconKey = new Registry({
         hive: hive,
-        key: '\\Software\\Classes\\' + protocol + '\\DefaultIcon'
+        key: key + '\\DefaultIcon'
       });
 
       iconKey.set('', Registry.REG_SZ, opts.icon, done);
     }
 
     function done(err) {
-      if (err) reject();
-      resolve(err);
+      if (err) reject(err);
+      resolve();
     }
   });
 }
 
 function uninstall(protocol, opts) {
-  opts = extend({
-    admin: false
-  }, opts);
+  if (typeof protocol !== 'string') throw new Error('parameter `protocol` is required');
 
-  // By default we write to "HKEY_CURRENT USER" which does not need admin
-  // privileges and gets inherited by "HKEY_CLASSES_ROOT". If admin option is
-  // used then we write to "HKEY_CLASSES_ROOT" assuming this is being called
-  // by a process with admin privileges.
-  var hive = opts.admin ? Registry.HKCR : Registry.HKCU;
+  var o = getOpts(protocol, opts);
+  opts = o.opts;
+  var hive = o.hive;
+  var key = o.key;
 
   return new Promise(function(resolve, reject) {
     var protocolKey = new Registry({
       hive: hive,
-      key: '\\Software\\Classes\\' + protocol
+      key: key
     });
 
     protocolKey.destroy(function(err) {
@@ -84,6 +76,21 @@ function uninstall(protocol, opts) {
       resolve();
     });
   });
+}
+
+function getOpts(protocol, opts) {
+  opts = extend({
+    allUsers: false,
+    icon: null
+  }, opts);
+
+  // By default we write to "HKEY_CURRENT USER" unless allUsers is true in
+  // which case we write to "HKEY_LOCAL_MACHINE" to apply protocol to all users
+  return {
+    opts: opts,
+    hive: opts.allUsers ? Registry.HKLM : Registry.HKCU,
+    key: '\\Software\\Classes\\' + protocol
+  }
 }
 
 function extend() {
