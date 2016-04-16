@@ -1,9 +1,8 @@
 var path = require('path');
 var Registry = require('winreg');
 
-function install(protocol, description, command, opts) {
+function install(protocol, command, opts) {
   if (typeof protocol !== 'string') throw new Error('parameter `protocol` is required');
-  if (typeof description !== 'string') throw new Error('parameter `description` is required');
   if (typeof command !== 'string') throw new Error('parameter `command` is required');
 
   var o = getOpts(protocol, opts);
