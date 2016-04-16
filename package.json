@@ -1,0 +1,35 @@
+{
+  "name": "register-protocol-win32",
+  "version": "1.0.0",
+  "description": "Registers a custom protocol (ie. myapp://) on Windows",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dennyferra/register-protocol-win32.git"
+  },
+  "keywords": [
+    "register",
+    "protocol",
+    "windows",
+    "win32",
+    "electron",
+    "registry"
+  ],
+  "author": "Denny Ferrassoli",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dennyferra/register-protocol-win32/issues"
+  },
+  "homepage": "https://github.com/dennyferra/register-protocol-win32#readme",
+  "dependencies": {
+    "winreg": "^1.1.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-as-promised": "^5.3.0",
+    "mocha": "^2.4.5"
+  }
+}
