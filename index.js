@@ -77,6 +77,27 @@ function uninstall(protocol, opts) {
   });
 }
 
+function exists(protocol, opts) {
+  if (typeof protocol !== 'string') throw new Error('parameter `protocol` is required');
+
+  var o = getOpts(protocol, opts);
+  opts = o.opts;
+  var hive = o.hive;
+  var key = o.key;
+
+  return new Promise(function(resolve, reject) {
+    var protocolKey = new Registry({
+      hive: hive,
+      key: key
+    });
+
+    protocolKey.keyExists(function(err, exists) {
+      if (err) reject(err);
+      resolve(exists);
+    });
+  });
+}
+
 function getOpts(protocol, opts) {
   opts = extend({
     allUsers: false,
@@ -102,5 +123,6 @@ function extend() {
 
 module.exports = {
   install,
-  uninstall
+  uninstall,
+  exists
 }

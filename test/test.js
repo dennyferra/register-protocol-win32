@@ -6,6 +6,7 @@ const childProcess = require('child_process');
 const Registry = require('winreg');
 
 chai.use(chaiAsPromised);
+chai.should();
 
 describe('register protocol', () => {
   const handler = require('../');
@@ -75,20 +76,18 @@ describe('register protocol', () => {
           key: key + '\\DefaultIcon'
         });
 
-        const getIconKey = new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
           iconKey.get('', (err, item) => {
             if (err) reject(err);
             if (item.value !== testIcon) reject();
             resolve();
           });
-        });
-
-        assert.isFulfilled(getIconKey);
+        }).should.be.fulfilled;
       });
   });
 
   // Requires Administrative Privileges
-  it('should create protocol for all users', () => {
+  it('should create protocol for all users (REQUIRES ADMIN)', () => {
     return handler.install(testProtocol, testCommand, { allUsers: true })
       .then(() => {
         const protocolKey = new Registry({
@@ -96,14 +95,12 @@ describe('register protocol', () => {
           key: key
         });
 
-        const getKey = new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
           protocolKey.get('', (err, item) => {
             if (err) reject(err);
             resolve();
           });
-        });
-
-        return assert.isFulfilled(getKey);
+        }).should.be.fulfilled;
       },
       (err) => assert(false, err.toString()));
   });
@@ -118,15 +115,32 @@ describe('register protocol', () => {
               key: key
             });
 
-            const getKey = new Promise((resolve, reject) => {
+            return new Promise((resolve, reject) => {
               protocolKey.keyExists((err, exists) => {
                 exists ? reject('key still exists') : resolve();
               });
-            });
+            }).should.be.fulfilled;
 
-            return assert.isFulfilled(getKey);
+            //return assert.isFulfilled(getKey);
           })
           .catch((err) => assert(false, err.toString()));
     });
+  });
+
+  it('should return true if protocol exists', () => {
+    return handler.install(testProtocol, testCommand)
+      .then(() => {
+        return handler.exists(testProtocol).should.eventually.equal(true);
+      });
+  });
+
+  it('should return false if protocol does not exist', () => {
+    return handler.install(testProtocol, testCommand)
+      .then(() => {
+        return handler.uninstall(testProtocol)
+          .then(() => {
+            return handler.exists(testProtocol).should.eventually.equal(false);
+          });
+    })
   });
 });
