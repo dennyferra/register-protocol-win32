@@ -1,6 +1,6 @@
 {
   "name": "register-protocol-win32",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Registers a custom protocol (ie. myapp://) on Windows",
   "main": "index.js",
   "scripts": {
