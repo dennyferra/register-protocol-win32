@@ -18,7 +18,6 @@ Documentation
     + `options` *(object optional)* -
         + `allUsers` *(boolean)* - If `true` creates protocol in HKEY_LOCAL_MACHINE (**requires administrator privileges**) otherwise creates in HKEY_CURRENT_USER
         + `icon` *(string)* - The path to the icon, example: `C:\\Program Files\\myapp.exe,1`
-        }
 
 * `uninstall(protocol, options)` (promise) - Removes the specified protocol from the Windows registry. Returns a promise.
     + `protocol` *(string required)* - The name of the protocol to remove, example: *myapp*
@@ -26,7 +25,7 @@ Documentation
         + `allUsers` (boolean) - If `true` removes protocol from HKEY_LOCAL_MACHINE (**requires administrator privileges**) otherwise removes from HKEY_CURRENT_USER
 
 * `exists(protocol, options)` (promise) - Determines if the protocol key exists in the registry. Returns a promise.
-    + `protocol` *(string required)* - The name of the protocol to remove, example: *myapp*
+    + `protocol` *(string required)* - The name of the protocol, example: *myapp*
     + `options` *(object optional)*
         + `allUsers` (boolean) - If `true` checks HKEY_LOCAL_MACHINE (**requires administrator privileges**) otherwise checks HKEY_CURRENT_USER
 
